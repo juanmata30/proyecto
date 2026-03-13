@@ -1,114 +1,167 @@
+# este módulo se encarga de manejar los datos de los profesores
+# y de mantener una lista que puede llenarse desde la API o manualmente.
+# aquí también encontramos funciones para ver, agregar o eliminar
+# profesores y sus materias.
+
+import requests
+
 class Profesor:
-    def __init__(self, nombre, cedula, correo, max_materias):
-        self.nombre = nombre
-        self.cedula = cedula
-        self.correo = correo
-        self.max_materias = max_materias
-        self.materias = []
+    def __init__(self, nombre, apellido, cedula, correo, max_materias, materias=None):
+        # Usamos los atributos tal cual los definiste, unificados en formato
+        self.Nombre = nombre
+        self.Apellido = apellido
+        self.Cedula = cedula
+        self.Correo = correo
+        self.Max_Materias = max_materias
+        # lista de códigos de materias que el profesor puede dictar
+        self.Materias = materias if materias is not None else []
+
+    @property
+    def nombre_completo(self):
+        return f"{self.Nombre} {self.Apellido}".strip()
+
+    def __str__(self):
+        # Método especial para que al hacer print(profe) se vea ordenado
+        return (f"Profesor: {self.nombre_completo} | C.I: {self.Cedula} | "
+                f"Correo: {self.Correo} | Carga: {self.Max_Materias} | Materias: {self.Materias}")
 
 class ModuloProfesores:
     def __init__(self):
+        # arranca vacío, la lista se puede llenar desde la API o a mano
         self.profesores = []
 
-    def cargar_datos_api(self, datos_api):
+    def cargar_datos_api(self, respuesta_profes):
+        """Convierte los diccionarios descargados de Github en objetos Profesor.
+
+        También imprime cuántos profesores se cargaron para que el usuario pueda
+        verificar inmediatamente que la descarga tuvo efecto.
+        """
         self.profesores = []
-        for dato in datos_api:
-            # Recuerda ajustar las claves si tu JSON las llama diferente
-            nuevo_profe = Profesor(dato.get('nombre', ''), dato.get('cedula', ''), dato.get('correo', ''), dato.get('max_materias', 1))
-            if 'materias' in dato:
-                nuevo_profe.materias = dato['materias']
+        # cada elemento de la respuesta es un diccionario con datos del profe
+        for dato in respuesta_profes:
+            # CORRECCIÓN CLAVE: Buscamos la clave tanto en minúsculas como en mayúsculas
+            # Así aseguramos atrapar los datos sin importar cómo vengan del JSON
+            materias_api = dato.get('materias', dato.get('Materias', []))
+            
+            nuevo_profe = Profesor(
+                nombre = dato.get('nombre', dato.get('Nombre', 'Sin Nombre')), 
+                apellido = dato.get('apellido', dato.get('Apellido', '')),
+                cedula = dato.get('cedula', dato.get('Cedula', 'Sin Cédula')), 
+                correo = dato.get('correo', dato.get('Email', 'Sin Correo')), 
+                max_materias = dato.get('max_materias', dato.get('Max_Materias', dato.get('Max Carga', 1))),
+                materias = materias_api
+            )
             self.profesores.append(nuevo_profe)
             
-    def _buscar_profesor(self, cedula):
-        for profe in self.profesores:
-            if profe.cedula == cedula:
-                return profe
-        return None
-        
-    # (Aquí van los demás métodos que hayas hecho para agregar, eliminar, ver profes, etc.)
-    # --- MÉTODOS AUXILIARES ---
-    def _buscar_profesor(self, cedula):
-        for profe in self.profesores:
-            if profe.cedula == cedula:
-                return profe
-        return None
+        # mostrar una pequeña estadística para que el usuario verifique la carga
+        print(f" {len(self.profesores)} profesores cargados desde la API con sus respectivas materias.")
 
-    def _materia_quedara_vacia(self, materia, profe_a_ignorar):
-        for profe in self.profesores:
-            if profe != profe_a_ignorar and materia in profe.materias:
-                return False 
-        return True 
-
-    # --- 1 y 2. Ver listas (Se mantienen iguales) ---
     def ver_lista(self):
+        """Muestra a todos los profesores en pantalla."""
         if not self.profesores:
+            # nada que mostrar aún
             print("No hay profesores registrados.")
             return
         print("\n--- LISTA DE PROFESORES ---")
         for profe in self.profesores:
-            print(profe)
+            materias_txt = ", ".join(profe.Materias) if profe.Materias else "(sin materias asignadas)"
+            print(f"- {profe.nombre_completo} (C.I: {profe.Cedula}) - Carga: {profe.Max_Materias} - Materias: {materias_txt}")
 
     def ver_profesor(self, cedula):
-        profe = self._buscar_profesor(cedula)
+        """Busca y muestra el detalle de un solo profesor."""
+        profe = self.buscar_profesor(cedula)
         if profe:
+            # si lo encontramos, lo imprimimos usando __str__ del objeto
+            print("\nProfesor encontrado:")
             print(profe)
         else:
-            print("Error: Profesor no encontrado.")
+            print(f"Error: Profesor con cédula {cedula} no encontrado.")
 
-    # --- 3. Agregar un profesor ---
-    def agregar_profesor(self, nombre, cedula, correo, max_materias):
-        if self._buscar_profesor(cedula):
+    def agregar_profesor(self):
+        """Pide datos por teclado y agrega un profesor nuevo."""
+        print("\n--- Agregar Nuevo Profesor ---")
+        # pedimos los campos uno a uno y creamos el objeto
+        nombre = input("Nombre(s): ")
+        apellido = input("Apellido(s): ")
+        cedula = input("Cédula: ")
+        
+        if self.buscar_profesor(cedula):
             print("Error: Ya existe un profesor con esa cédula.")
             return
+            
+        correo = input("Correo electrónico: ")
+        try:
+            carga = int(input("Número máximo de materias: "))
+        except ValueError:
+            carga = 1
+            
+        materias_input = input("Ingrese las materias separadas por coma: ")
+        lista_materias = [m.strip() for m in materias_input.split(",") if m.strip() != ""]
         
-        nuevo_profe = Profesor(nombre, cedula, correo, max_materias)
+        nuevo_profe = Profesor(nombre, apellido, cedula, correo, carga, materias=lista_materias)
         self.profesores.append(nuevo_profe)
-        
-        # NOTA PARA EL FUTURO:
-        print(f"Éxito: Profesor '{nombre}' agregado localmente.")
-        print("-> (Aquí iría el código para enviar el nuevo profesor a la API)")
+        print(f"Profesor {nombre} {apellido if 'apellido' in locals() else ''} agregado con éxito.")
 
-    # --- 4. Eliminar un profesor ---
     def eliminar_profesor(self, cedula):
-        profe = self._buscar_profesor(cedula)
+        """Busca y elimina un profesor validando que no deje materias sin profesor."""
+        # primero localizamos el objeto
+        profe = self.buscar_profesor(cedula)
         if not profe:
+            print("Error: Profesor no encontrado.")
             return
 
         materias_en_peligro = []
-        for materia in profe.materias:
-            if self._materia_quedara_huerfana(materia, profe):
+        for materia in profe.Materias:
+            if self.materia_quedara_huerfana(materia, profe):
                 materias_en_peligro.append(materia)
         
         if len(materias_en_peligro) > 0:
-            print(f"\n¡ADVERTENCIA! Al eliminar este profesor, estas materias quedarán sin docentes: {', '.join(materias_en_peligro)}")
+            print(f"\n¡ADVERTENCIA! Al eliminar a este profesor, estas materias quedarán sin docentes: {', '.join(materias_en_peligro)}")
             confirmacion = input("¿Estás seguro de que deseas continuar? (s/n): ")
             if confirmacion.lower() != 's':
                 print("Operación cancelada.")
                 return
 
         self.profesores.remove(profe)
-        print("Éxito: Profesor eliminado localmente.")
-        print(f"-> (Aquí iría el código para borrar al profesor con cédula {cedula} en la API)")
+        print(f"Éxito: Profesor {profe.nombre_completo} eliminado.")
 
-    # --- 5. Modificar materias ---
-    def agregar_materia_a_profesor(self, cedula, materia):
-        profe = self._buscar_profesor(cedula)
-        if not profe: return
-        if len(profe.materias) >= profe.max_materias: return
-        if materia in profe.materias: return
+    def agregar_materia_a_profesor(self, cedula, codigo):
+        """Le asigna una nueva materia a un profesor existente."""
+        profe = self.buscar_profesor(cedula)
+        if not profe: return print("Profesor no encontrado.")
+        if len(profe.Materias) >= profe.Max_Materias: return print("El profesor alcanzó su carga máxima.")
+        if codigo in profe.Materias: return print("El profesor ya tiene esa materia.")
 
-        profe.materias.append(materia)
-        print(f"Éxito: '{materia}' agregada a {profe.nombre}.")
-        print("-> (Aquí iría el código para actualizar la lista de materias en la API)")
+        profe.Materias.append(codigo)
+        print(f"Éxito: '{codigo}' agregada a {profe.Nombre}.")
 
-    def quitar_materia_a_profesor(self, cedula, materia):
-        profe = self._buscar_profesor(cedula)
-        if not profe or materia not in profe.materias: return
+    def quitar_materia_a_profesor(self, cedula, codigo):
+        """Le quita una materia a un profesor."""
+        profe = self.buscar_profesor(cedula)
+        if not profe or codigo not in profe.Materias: return print("Profesor no encontrado o no dicta esa materia.")
 
-        if self._materia_quedara_huerfana(materia, profe):
-            print(f"\n¡ADVERTENCIA! Nadie más dicta '{materia}'.")
+        if self.materia_quedara_huerfana(codigo, profe):
+            print(f"\n¡ADVERTENCIA! Nadie más dicta '{codigo}'.")
             if input("¿Quitar de todas formas? (s/n): ").lower() != 's': return
 
-        profe.materias.remove(materia)
-        print(f"Éxito: '{materia}' removida de {profe.nombre}.")
-        print("-> (Aquí iría el código para actualizar la lista de materias en la API)")
+        profe.Materias.remove(codigo)
+        print(f"Éxito: '{codigo}' removida de {profe.Nombre}.")
+
+    def buscar_profesor(self, cedula):
+        """Herramienta interna para encontrar el objeto Profesor dada su cédula."""
+        # Normalizamos la consulta y comparamos contra la cédula y el nombre
+        # así no importa si el usuario escribe mayúsculas, espacios, etc.
+        query = str(cedula).strip().lower()
+        for profe in self.profesores:
+            ced_profe = str(profe.Cedula).strip().lower()
+            nombre_profe = str(profe.nombre_completo).strip().lower()
+            if ced_profe == query or nombre_profe == query:
+                return profe
+        return None
+
+    def materia_quedara_huerfana(self, materia, profe_a_ignorar):
+        """Verifica si al borrar a un profesor, la materia se queda sin nadie que la dicte."""
+        for profe in self.profesores:
+            if profe != profe_a_ignorar and materia in profe.Materias:
+                return False 
+        return True
