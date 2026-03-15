@@ -1,10 +1,10 @@
+# CÓDIGO PRINCIPAL -- archivo: proyecto.py
 """""
 este es el script principal, el que arranca el sistema.
  define los menús que el usuario ve, coordina los módulos de
  profesores, materias, creación y modificación de horarios.
- la def de `menu_inicio()` al final para poner todo en marcha.
+ la def de menu_inicio() al final para poner todo en marcha.
 """""
-# CÓDIGO PRINCIPAL
 
 import requests
 
@@ -14,7 +14,7 @@ from creacion_de_horarios import ModuloControlEstudios
 from modificacion_horarios import ModuloModificacionHorarios
 
 def menu_horarios(sis_control, sis_modificacion):
-    # este menú aparece cuando ya se generó (o cargó) un horario
+    # este menu aparece cuando ya se genero o se cargo un horario
     # y el usuario quiere consultarlo o guardarlo en archivo
     while True:
         print("\n" + "="*40)
@@ -41,7 +41,7 @@ def menu_horarios(sis_control, sis_modificacion):
             print("\nBloques disponibles:")
             for i in range(len(sis_control.horarios)):
                 print(f"  - {sis_control.horarios[i]}")
-            bloque = input("\nEscriba el bloque exacto (Ej. Lunes y Miércoles | 7:00 - 8:30): ")
+            bloque = input("\nEscriba el bloque exacto (Ej. Lunes y Miércoles 7:00 - 8:30): ")
             sis_control.ver_salones_hora(bloque)
             
         elif opcion == "4":
@@ -51,7 +51,7 @@ def menu_horarios(sis_control, sis_modificacion):
             sis_modificacion.iniciar_modificacion()
             
         elif opcion == "6":
-            print("Saliendo del control de estudios...")
+            print("Saliendo de la generacion de horarios...")
             break 
         else:
             print("Opción inválida.")
@@ -72,7 +72,7 @@ def menu_fundamentales(sis_profes, sis_materias, sis_control, sis_modificacion):
         print("="*40)
         print("1. Gestionar Profesores")
         print("2. Gestionar Materias")
-        print("3. Generar Horarios (Pasar a Control de Estudios)")
+        print("3. Generar Horarios (Pasar a Creacion de Horarios)")
         print("4. Volver al inicio")
         
         opcion = input("Seleccione una opción: ")
@@ -144,7 +144,6 @@ def menu_fundamentales(sis_profes, sis_materias, sis_control, sis_modificacion):
                 else: print("Opción inválida.")
             
         elif opcion == "3":
-            # Si no hay materias o profesores, el sistema avisará y no hará mucho, pero es seguro.
             sis_control.generar_horarios()
             menu_horarios(sis_control, sis_modificacion)
             
@@ -155,7 +154,7 @@ def menu_fundamentales(sis_profes, sis_materias, sis_control, sis_modificacion):
             print("Opción inválida.")
 
 def menu_inicio():
-    """El menú principal que pide el enunciado."""
+    """El menú principal."""
     sis_profes = ModuloProfesores()
     sis_materias = ModuloMaterias(sis_profes)
     sis_control = ModuloControlEstudios(sis_profes, sis_materias)
