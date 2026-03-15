@@ -1,10 +1,11 @@
-# aquí vive el «cerebro» que genera horarios automáticos.
-# combina listas de materias y profesores, respeta bloqueos y salones,
-# y produce asignaciones. también ofrece vistas y exportación a CSV.
-
-import csv
-from profesores import ModuloProfesores          
-from materias import ModuloMaterias, Materia    
+#archivo: creacion_de_horarios.py
+"""""
+este archivo es el que genera horarios automáticos.
+combina listas de materias y profesores, observa los border cases bloqueos y salones,
+y produce asignaciones. también ofrece vistas y exportación a CSV.
+"""""
+import csv     
+from materias import Materia    
 
 class SeccionAsignada:
     # objeto que guarda los datos de una sección ya colocada en el horario
@@ -20,8 +21,6 @@ class ModuloControlEstudios:
         self.mod_materias = modulo_materias
         self.salones_disponibles = 0
         self.asignaciones: list[SeccionAsignada] = [] 
-        
-        # Bloques horarios requeridos por el PDF (2 días, 7 bloques = 14 totales)
         self.horarios: list[str] = []
         dias = ["Lunes y Miércoles", "Martes y Jueves"]
         horas = ["7:00 - 8:30", "8:45 - 10:15", "10:30 - 12:00", 
@@ -31,11 +30,9 @@ class ModuloControlEstudios:
                 self.horarios.append(f"{dia} | {hora}")
 
     def generar_horarios(self):
-        """Generador AUTOMÁTICO según los lineamientos del PDF."""
-        # este método es el corazón del módulo: se encarga de distribuir
-        # las secciones en los bloques respetando salones y cargas de profe.
+        """Generador DE HORARIO."""
         print("\n" + "="*40)
-        print("GENERANDO HORARIO AUTOMÁTICAMENTE...")
+        print("GENERANDO HORARIO...")
         print("="*40)
         
         # 0. si no hay datos en los módulos avisamos y abandonamos
@@ -52,11 +49,9 @@ class ModuloControlEstudios:
             self.salones_disponibles = int(entrada) if entrada.strip() != "" else 30
         except ValueError:
             self.salones_disponibles = 30
-
-        # preparar estructuras auxiliares antes de empezar
         self.asignaciones = []
-        secciones_sin_horario = []   # recopilaremos los códigos que no logramos asignar
-        secciones_con_horario = []   # lista de tuplas (id_seccion, profesor)
+        secciones_sin_horario = []   
+        secciones_con_horario = []  
         cargas_profesores = {p.Cedula: 0 for p in self.mod_profes.profesores}
         horario_profesores = {p.Cedula: [] for p in self.mod_profes.profesores}
         uso_salones = {b: 0 for b in self.horarios}
@@ -90,7 +85,6 @@ class ModuloControlEstudios:
                                     # el profe no llegó a su tope de horas
                                     if bloque_actual not in horario_profesores[p.Cedula]:
                                         # no está ocupado en este bloque
-                                        
                                         # Asignación exitosa
                                         nueva_seccion = SeccionAsignada(id_seccion, materia, p, bloque_actual)
                                         self.asignaciones.append(nueva_seccion)
@@ -109,7 +103,7 @@ class ModuloControlEstudios:
                         secciones_sin_horario.append(id_seccion)
                         
         print(f"\nHorario generado. Se programaron {len(self.asignaciones)} secciones en total.")
-        # mostrar resumen por separado
+        # muestra resumen por separado
         if secciones_con_horario:
             print("\nSecciones con horario asignado:")
             for sec, prof in secciones_con_horario:
