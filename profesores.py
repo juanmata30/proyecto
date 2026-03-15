@@ -1,19 +1,18 @@
-# este módulo se encarga de manejar los datos de los profesores
-# y de mantener una lista que puede llenarse desde la API o manualmente.
-# aquí también encontramos funciones para ver, agregar o eliminar
-# profesores y sus materias.
-
-import requests
+#archivo: profesores.py
+"""""
+este módulo se encarga de manejar los datos de los profesores
+ y de mantener una lista que puede llenarse desde la API o manualmente.
+ aquí también encontramos funciones para ver, agregar o eliminar
+profesores y sus materias.
+"""""
 
 class Profesor:
     def __init__(self, nombre, apellido, cedula, correo, max_materias, materias=None):
-        # Usamos los atributos tal cual los definiste, unificados en formato
         self.Nombre = nombre
         self.Apellido = apellido
         self.Cedula = cedula
         self.Correo = correo
         self.Max_Materias = max_materias
-        # lista de códigos de materias que el profesor puede dictar
         self.Materias = materias if materias is not None else []
 
     @property
@@ -21,28 +20,22 @@ class Profesor:
         return f"{self.Nombre} {self.Apellido}".strip()
 
     def __str__(self):
-        # Método especial para que al hacer print(profe) se vea ordenado
         return (f"Profesor: {self.nombre_completo} | C.I: {self.Cedula} | "
                 f"Correo: {self.Correo} | Carga: {self.Max_Materias} | Materias: {self.Materias}")
 
 class ModuloProfesores:
     def __init__(self):
-        # arranca vacío, la lista se puede llenar desde la API o a mano
+        # empieza vacío, la lista se puede llenar desde la API o a mano
         self.profesores = []
 
     def cargar_datos_api(self, respuesta_profes):
         """Convierte los diccionarios descargados de Github en objetos Profesor.
-
         También imprime cuántos profesores se cargaron para que el usuario pueda
         verificar inmediatamente que la descarga tuvo efecto.
         """
         self.profesores = []
-        # cada elemento de la respuesta es un diccionario con datos del profe
         for dato in respuesta_profes:
-            # CORRECCIÓN CLAVE: Buscamos la clave tanto en minúsculas como en mayúsculas
-            # Así aseguramos atrapar los datos sin importar cómo vengan del JSON
             materias_api = dato.get('materias', dato.get('Materias', []))
-            
             nuevo_profe = Profesor(
                 nombre = dato.get('nombre', dato.get('Nombre', 'Sin Nombre')), 
                 apellido = dato.get('apellido', dato.get('Apellido', '')),
@@ -53,13 +46,11 @@ class ModuloProfesores:
             )
             self.profesores.append(nuevo_profe)
             
-        # mostrar una pequeña estadística para que el usuario verifique la carga
         print(f" {len(self.profesores)} profesores cargados desde la API con sus respectivas materias.")
 
     def ver_lista(self):
         """Muestra a todos los profesores en pantalla."""
         if not self.profesores:
-            # nada que mostrar aún
             print("No hay profesores registrados.")
             return
         print("\n--- LISTA DE PROFESORES ---")
@@ -71,7 +62,6 @@ class ModuloProfesores:
         """Busca y muestra el detalle de un solo profesor."""
         profe = self.buscar_profesor(cedula)
         if profe:
-            # si lo encontramos, lo imprimimos usando __str__ del objeto
             print("\nProfesor encontrado:")
             print(profe)
         else:
@@ -80,7 +70,6 @@ class ModuloProfesores:
     def agregar_profesor(self):
         """Pide datos por teclado y agrega un profesor nuevo."""
         print("\n--- Agregar Nuevo Profesor ---")
-        # pedimos los campos uno a uno y creamos el objeto
         nombre = input("Nombre(s): ")
         apellido = input("Apellido(s): ")
         cedula = input("Cédula: ")
@@ -88,7 +77,6 @@ class ModuloProfesores:
         if self.buscar_profesor(cedula):
             print("Error: Ya existe un profesor con esa cédula.")
             return
-            
         correo = input("Correo electrónico: ")
         try:
             carga = int(input("Número máximo de materias: "))
@@ -104,7 +92,6 @@ class ModuloProfesores:
 
     def eliminar_profesor(self, cedula):
         """Busca y elimina un profesor validando que no deje materias sin profesor."""
-        # primero localizamos el objeto
         profe = self.buscar_profesor(cedula)
         if not profe:
             print("Error: Profesor no encontrado.")
@@ -149,8 +136,6 @@ class ModuloProfesores:
 
     def buscar_profesor(self, cedula):
         """Herramienta interna para encontrar el objeto Profesor dada su cédula."""
-        # Normalizamos la consulta y comparamos contra la cédula y el nombre
-        # así no importa si el usuario escribe mayúsculas, espacios, etc.
         query = str(cedula).strip().lower()
         for profe in self.profesores:
             ced_profe = str(profe.Cedula).strip().lower()
