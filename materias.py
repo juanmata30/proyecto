@@ -1,10 +1,11 @@
-# módulo ligero para gestionar las materias del plan de estudios.
-# permite cargar las asignaturas de la API, guardarlas en memoria
-# y consultar, agregar, borrar o cambiar el número de secciones.
-
+#archivo: materias.py
+"""""
+módulo ligero para gestionar las materias del plan de estudios.
+permite cargar las asignaturas de la API, guardarlas en memoria
+y consultar, agregar, borrar o cambiar el número de secciones.
+"""""
 
 class Materia:
-    # un objeto simple que guarda código, nombre y cuántas secciones hay
     def __init__(self, codigo, nombre, num_secciones):
         self.Codigo = codigo
         self.Nombre = nombre
@@ -15,13 +16,11 @@ class Materia:
 
 class ModuloMaterias:
     def __init__(self, modulo_profesores):
-        # Este módulo conoce a modulo_profesores por si necesita hacer validaciones cruzadas
         self.modulo_profesores = modulo_profesores
         self.materias = []
 
     def cargar_datos_api(self, datos_api):
         """Convierte los diccionarios de la API en objetos Materia.
-
         Las claves del JSON están en mayúsculas, así que usamos los nombres
         correctos y mostramos un resumen tras la carga.
         """
@@ -37,7 +36,6 @@ class ModuloMaterias:
 
     def ver_lista(self):
         """Muestra todas las materias disponibles."""
-        # simplemente recorre la lista y las imprime en modo amigable
         if not self.materias:
             print("No hay materias registradas.")
             return
@@ -60,7 +58,6 @@ class ModuloMaterias:
         codigo = input("Código (Ej. BPTSP04): ")
         
         if self.buscar_materia(codigo):
-            # no podemos duplicar códigos, así que avisamos y paramos
             print(" Error: Ya existe una materia con ese código.")
             return
             
@@ -68,7 +65,6 @@ class ModuloMaterias:
         try:
             secciones = int(input("Número de secciones a programar: "))
         except ValueError:
-            # si el usuario escribe cualquier cosa, usamos 1 por seguridad
             print("Valor inválido. Se asignará 1 sección por defecto.")
             secciones = 1
             
@@ -80,15 +76,13 @@ class ModuloMaterias:
         """Elimina una materia del sistema."""
         materia = self.buscar_materia(codigo)
         if not materia:
-            # si no existe, nada que hacer
             print(" Error: Materia no encontrada.")
             return
         self.materias.remove(materia)
         print(f"Éxito: Materia {materia.Nombre} eliminada.")
 
     def modificar_secciones(self, codigo):
-        """Permite cambiar cuántas secciones se van a dar de una materia (Requisito PDF)."""
-        # el usuario puede corregir la cantidad si se equivoca al crearla
+        """Permite cambiar cuántas secciones se van a dar de una materia."""
         materia = self.buscar_materia(codigo)
         if not materia:
             print(" Error: Materia no encontrada.")
